@@ -7,11 +7,13 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 
 // For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace Texter.Controllers
 {
+    [Authorize]
     public class ContactsController : Controller
     {
 		private readonly ApplicationDbContext _db;
@@ -31,11 +33,17 @@ namespace Texter.Controllers
 		public IActionResult Details(int contactId)
 		{
 			var thisContact = _db.Contacts
-										 .FirstOrDefault(x => x.ContactId == contactId);
-
-
-			return View(thisContact);
+							.FirstOrDefault(x => x.ContactId == contactId);
+            return View(thisContact);
 		}
+
+        [HttpPost]
+        public IActionResult NewMessage(int contactId)
+        {
+            Message newMessage = new Message(Request.Form["sendTo"], Request.Form["sentFrom"], Request.Form["messageBody"]);
+            newMessage.Send();
+            return RedirectToAction("Details", new{id=contactId});
+        }
 
 		public IActionResult Create()
 		{
@@ -104,13 +112,5 @@ namespace Texter.Controllers
 			}
 		}
 
-		[HttpPost]
-		public IActionResult NewReview(string author, string contentBody, int rating, int productId)
-		{
-			Review newReview = new Review(author, contentBody, rating, productId);
-			db.Reviews.Add(newReview);
-			db.SaveChanges();
-			return Json(newReview);
-		}
     }
 }
